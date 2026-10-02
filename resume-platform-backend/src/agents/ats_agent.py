@@ -1,0 +1,2 @@
+class ATSAgent:
+    pass
