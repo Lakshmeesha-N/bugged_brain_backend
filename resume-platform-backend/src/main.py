@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from src.core.database import get_db
+from src.routers.profile import router as profile_router
 
 app = FastAPI()
+
+app.include_router(profile_router)
 
 
 @app.get("/health")
