@@ -1,0 +1,25 @@
+{
+  "id": "classic",
+  "name": "Classic",
+  "required": [
+    "name",
+    "email",
+    "education"
+  ],
+  "optional": [
+    "phone",
+    "location",
+    "links",
+    "summary",
+    "skills",
+    "projects",
+    "experience",
+    "achievements",
+    "certifications",
+    "extracurriculars"
+  ],
+  "limits": {
+    "projects": 3,
+    "bullets_per_item": 3
+  }
+}
