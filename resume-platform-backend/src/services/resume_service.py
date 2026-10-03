@@ -3,13 +3,19 @@ from google.cloud import firestore
 from src.core.database import get_db
 
 
-def save_resume(uid: str, template_id: str, content: Dict[str, Any]) -> str:
+def save_resume(
+    uid: str,
+    template_id: str,
+    content: Dict[str, Any],
+    job_id: Optional[str] = None
+) -> str:
     db = get_db()
     resumes_ref = db.collection("users").document(uid).collection("resumes")
     doc_ref = resumes_ref.document()
 
     data = {
         "template_id": template_id,
+        "job_id": job_id,
         "content": content,
         "created_at": firestore.SERVER_TIMESTAMP,
     }

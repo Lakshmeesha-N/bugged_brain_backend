@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     TEMPLATES_BUCKET: str = "resume-templates-bucket"
 
+    # Usage / billing
+    FREE_DAILY_TOKEN_LIMIT: int = 50000
+    PREMIUM_DAILY_TOKEN_LIMIT: int = 500000
+    STRIPE_PAYMENT_LINK: str = ""
+    USAGE_TIMEZONE: str = "Asia/Kolkata"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,

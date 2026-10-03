@@ -14,10 +14,22 @@ security_scheme = HTTPBearer()
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)) -> dict:
     try:
         decoded = auth.verify_id_token(credentials.credentials)
-        return {"uid": decoded["uid"]}
+        return {
+            "uid": decoded["uid"],
+            "admin": bool(decoded.get("admin", False)),
+        }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid or expired authentication token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if not user.get("admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return user

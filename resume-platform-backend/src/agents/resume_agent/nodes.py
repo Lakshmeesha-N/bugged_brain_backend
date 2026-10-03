@@ -25,6 +25,8 @@ async def generate(state: ResumeState) -> dict:
     extra_info = state.get("extra_info")
     answers = state.get("answers", [])
     fields = state.get("fields", {})
+    job_title = state.get("job_title")
+    job_description = state.get("job_description")
     attempts = state.get("attempts", 0) + 1
     validation_error = state.get("validation_error")
 
@@ -36,6 +38,10 @@ async def generate(state: ResumeState) -> dict:
         "answers": answers,
         "template_fields": fields,
     }
+    if job_title:
+        user_prompt_data["job_title"] = job_title
+    if job_description:
+        user_prompt_data["job_description"] = job_description[:6000]
     if validation_error:
         user_prompt_data["previous_validation_error"] = validation_error
 

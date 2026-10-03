@@ -1,22 +1,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi.testclient import TestClient
-from src.core.auth import get_current_user
-from src.main import app
-
-client = TestClient(app)
 
 
-def override_get_current_user():
-    return {"uid": "test123"}
-
-
-app.dependency_overrides[get_current_user] = override_get_current_user
-
-
+@patch("src.routers.resume.record_usage")
+@patch("src.routers.resume.start_usage_tracking", return_value=MagicMock(tokens=0))
 @patch("src.routers.resume.profile_service.get_profile")
-def test_generate_missing_profile_returns_404(mock_get_profile):
+def test_generate_missing_profile_returns_404(mock_get_profile, mock_tracking, mock_record, authed_no_limit_client):
     mock_get_profile.return_value = None
-    response = client.post(
+    response = authed_no_limit_client.post(
         "/resume/generate",
         json={"template_id": "classic", "extra_info": None, "answers": []}
     )
@@ -24,17 +14,21 @@ def test_generate_missing_profile_returns_404(mock_get_profile):
     assert "Profile not found" in response.json()["detail"]
 
 
+@patch("src.routers.resume.record_usage")
+@patch("src.routers.resume.start_usage_tracking", return_value=MagicMock(tokens=0))
 @patch("src.routers.resume.resume_service.save_resume")
 @patch("src.routers.resume.run_resume_agent", new_callable=AsyncMock)
 @patch("src.routers.resume.profile_service.get_profile")
-def test_generate_needs_info_saves_nothing(mock_get_profile, mock_run_agent, mock_save):
+def test_generate_needs_info_saves_nothing(
+    mock_get_profile, mock_run_agent, mock_save, mock_tracking, mock_record, authed_no_limit_client
+):
     mock_get_profile.return_value = {"name": "Jane"}
     mock_run_agent.return_value = {
         "status": "needs_info",
         "questions": ["What is your graduation year?"]
     }
 
-    response = client.post(
+    response = authed_no_limit_client.post(
         "/resume/generate",
         json={"template_id": "classic", "extra_info": None, "answers": []}
     )
@@ -46,10 +40,14 @@ def test_generate_needs_info_saves_nothing(mock_get_profile, mock_run_agent, moc
     mock_save.assert_not_called()
 
 
+@patch("src.routers.resume.record_usage")
+@patch("src.routers.resume.start_usage_tracking", return_value=MagicMock(tokens=0))
 @patch("src.routers.resume.resume_service.save_resume")
 @patch("src.routers.resume.run_resume_agent", new_callable=AsyncMock)
 @patch("src.routers.resume.profile_service.get_profile")
-def test_generate_ready_saves_and_returns_id(mock_get_profile, mock_run_agent, mock_save):
+def test_generate_ready_saves_and_returns_id(
+    mock_get_profile, mock_run_agent, mock_save, mock_tracking, mock_record, authed_no_limit_client
+):
     mock_get_profile.return_value = {"name": "Jane"}
     mock_run_agent.return_value = {
         "status": "ready",
@@ -57,7 +55,7 @@ def test_generate_ready_saves_and_returns_id(mock_get_profile, mock_run_agent, m
     }
     mock_save.return_value = "res_12345"
 
-    response = client.post(
+    response = authed_no_limit_client.post(
         "/resume/generate",
         json={"template_id": "classic", "extra_info": None, "answers": []}
     )
@@ -76,7 +74,7 @@ def test_generate_ready_saves_and_returns_id(mock_get_profile, mock_run_agent, m
 @patch("src.routers.resume.html_to_pdf")
 @patch("src.routers.resume.template_service.render_html")
 @patch("src.routers.resume.resume_service.get_resume")
-def test_get_resume_pdf_returns_bytes(mock_get_resume, mock_render_html, mock_pdf):
+def test_get_resume_pdf_returns_bytes(mock_get_resume, mock_render_html, mock_pdf, authed_no_limit_client):
     mock_get_resume.return_value = {
         "template_id": "classic",
         "content": {"name": "Jane Doe"}
@@ -84,7 +82,7 @@ def test_get_resume_pdf_returns_bytes(mock_get_resume, mock_render_html, mock_pd
     mock_render_html.return_value = "<html><body>Jane Doe</body></html>"
     mock_pdf.return_value = b"%PDF-1.4 Mock PDF binary content"
 
-    response = client.get("/resume/res_12345/pdf")
+    response = authed_no_limit_client.get("/resume/res_12345/pdf")
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")

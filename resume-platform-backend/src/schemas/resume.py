@@ -9,6 +9,7 @@ class Answer(BaseModel):
 
 class GenerateRequest(BaseModel):
     template_id: str
+    job_id: Optional[str] = None
     extra_info: Optional[str] = None
     answers: List[Answer] = Field(default_factory=list)
 
